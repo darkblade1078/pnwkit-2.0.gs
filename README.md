@@ -16,7 +16,7 @@ A new 2.0 version that was made using code from pnwkit 1.0 with some modificatio
 
 ## Installation
 
-Install the library using this code: ```1piLjFfkab2xCcbd4aFf6asmnrpZ31LZkbpacPwqbzef-G52tpPBr_mAV```
+Install the library using this code: ```1z8BJslEJaGkxbtPxUJsMJoH3Xd0A7JW81QIHnZ-Q5XtvbYAVhR_cUPD4```
 
 Note - When installing the library, set the identifier to ```pnwkit```.
 
