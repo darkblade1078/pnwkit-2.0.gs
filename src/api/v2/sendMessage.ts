@@ -1,4 +1,3 @@
-import superagent from "superagent";
 import { Kit } from "../../..";
 import { messageResult } from "../../interfaces/v2/sendMessage";
 
@@ -6,20 +5,25 @@ import { messageResult } from "../../interfaces/v2/sendMessage";
 export default async function sendMessage(this: Kit, recipientID: number, subject: string, message: string): Promise<messageResult> {
     if (!this.apiKey) throw new Error('SuperAgent: Cannot make a call without an API key!');
 
-    const res = await superagent.post(`https://politicsandwar.com/api/send-message/`)
-        .query({
-            'key': `${this.apiKey}`,
-        })
-        .field('to', `${recipientID}`)
-        .field('subject', `${subject}`)
-        .field('message', `${message}`)
-        .accept('json')
-        .then()
-        .catch((e: Error) => {
-            throw new Error(`SuperAgent: Failed to make api call, ${e}`);
-        });
+    const formData  = {
+        'to': recipientID,
+        'subject': subject,
+        'message': message
+      };
+    const options = {
+        'method' : 'post',
+        'payload' : formData
+    };
 
-    if (!res.body.success) throw new Error(`SuperAgent: Received no data from API call, ${JSON.stringify(res.body)}`);
+    // @ts-ignore
+    const res = await UrlFetchApp.fetch(`https://politicsandwar.com/api/send-message?key=${this.apiKey}`, options);
 
-    return res.body;
+    const resJSON = JSON.parse(res.getContentText());
+
+    if (!resJSON)
+      throw new Error(`GraphQLService: Recieved no data from API call, ${JSON.stringify(resJSON)}`);
+
+    if (!resJSON.success) throw new Error(`SuperAgent: Received no data from API call, ${JSON.stringify(resJSON.body)}`);
+
+    return resJSON;
 }

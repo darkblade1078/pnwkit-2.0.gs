@@ -1,4 +1,3 @@
-import superagent from 'superagent';
 import { responseAndMetadataI } from '../interfaces/other';
 import { anyCall } from '../interfaces';
 import { channelSubscription, subscriptionEvent, subscriptionModel } from '../interfaces/subscriptions';
@@ -20,26 +19,24 @@ class GraphQLService {
   public async makeCall(query: string, apiKey: string): Promise<responseAndMetadataI> {
     if (!apiKey) throw new Error('GraphQLService: Cannot make a call without an API key!');
 
-    const res = await superagent.get(this.politicsAndWarAPIRoot)
-      .query({
-        api_key: apiKey,
-        query,
-      })
-      .accept('json')
-      .then()
-      .catch((e: Error) => {
-        throw new Error(`GraphQLService: Failed to make api call, ${e}`);
-      });
+    const res = UrlFetchApp.fetch(`${this.politicsAndWarAPIRoot}?api_key=${apiKey}&query=${encodeURIComponent(query.replace(/([ \n])+/g, ''))}`);
 
-    if (!res.body.data) throw new Error(`GraphQLService: Received no data from API call, ${JSON.stringify(res.body)}`);
+    const resJSON = JSON.parse(res.getContentText());
+
+    if (!resJSON.data) 
+      throw new Error(`GraphQLService: Recieved no data from API call, ${JSON.stringify(resJSON)}`);
 
     return {
-      data: res.body.data,
+      data: resJSON.data,
       rateLimit: {
-        resetAfterSeconds: Number(res.get('X-RateLimit-Reset-After')),
-        limit: Number(res.get('X-RateLimit-Limit')),
-        remaining: Number(res.get('X-RateLimit-Remaining')),
-        reset: Number(res.get('X-RateLimit-Reset')),
+        // @ts-ignore
+        resetAfterSeconds: Number(res.getHeaders()['X-RateLimit-Reset-After']),
+        // @ts-ignore
+        limit: Number(res.getHeaders()['X-RateLimit-Limit']),
+        // @ts-ignore
+        remaining: Number(res.getHeaders()['X-RateLimit-Remaining']),
+        // @ts-ignore
+        reset: Number(res.getHeaders()['X-RateLimit-Reset']),
       },
     };
   }
@@ -57,55 +54,35 @@ class GraphQLService {
     if (!botKey) throw new Error('GraphQLService: Cannot make a call without an botKey!');
     if (!apiKey) throw new Error('GraphQLService: Cannot make a call without an API key!');
 
+    const options = {
+      'method' : 'get',
+      "headers" : {
+        'X-Bot-Key': `${botKey}`,
+        'X-Api-Key': `${apiKey}`,
+      }
+    };
 
-    const res = await superagent.get(this.politicsAndWarAPIRoot)
-      .query({
-        api_key: apiKey,
-        query,
-      })
-      .set({
-        'X-Bot-Key': botKey,
-        'X-Api-Key': apiKey
-      })
-      .accept('json')
-      .then()
-      .catch((e: Error) => {
-        throw new Error(`GraphQLService: Failed to make api call, ${e}`);
-      });
+    // @ts-ignore
+    const res = UrlFetchApp.fetch(`${this.politicsAndWarAPIRoot}?api_key=${apiKey}&query=${encodeURIComponent(query.replace(/([ \n])+/g, ''))}`, options);
 
-    if (!res.body.data) throw new Error(`GraphQLService: Received no data from API call, ${JSON.stringify(res.body)}`);
+    const resJSON = JSON.parse(res.getContentText());
+
+    if (!resJSON.data) 
+      throw new Error(`GraphQLService: Recieved no data from API call, ${JSON.stringify(resJSON)}`);
 
     return {
-      data: res.body.data,
+      data: resJSON.data,
       rateLimit: {
-        resetAfterSeconds: Number(res.get('X-RateLimit-Reset-After')),
-        limit: Number(res.get('X-RateLimit-Limit')),
-        remaining: Number(res.get('X-RateLimit-Remaining')),
-        reset: Number(res.get('X-RateLimit-Reset')),
+        // @ts-ignore
+        resetAfterSeconds: Number(res.getHeaders()['X-RateLimit-Reset-After']),
+        // @ts-ignore
+        limit: Number(res.getHeaders()['X-RateLimit-Limit']),
+        // @ts-ignore
+        remaining: Number(res.getHeaders()['X-RateLimit-Remaining']),
+        // @ts-ignore
+        reset: Number(res.getHeaders()['X-RateLimit-Reset']),
       },
     };
-  }
-
-  /**
-* Calls the Politics and War V3 API with a mutation
-* @param {string} link The Channel Link
-* @param {string} apiKey Your P&W API key
-*
-* @return {Promise<any>} Returns data to be type determined in a closer function
-* @throws {Error}
-*/
-  public async makeChannelCall(model: subscriptionModel, event: subscriptionEvent, apiKey: string, filters?: string): Promise<channelSubscription> {
-    if (!apiKey) throw new Error('GraphQLService: Cannot make a call without an API key!');
-
-    if (!filters)
-      filters = ``;
-
-    const res = await superagent.get(`https://api.politicsandwar.com/subscriptions/v1/subscribe/${model}/${event}?api_key=${apiKey}${filters}`)
-      .catch((e: Error) => {
-        throw new Error(`GraphQLService: Failed to make api call, ${e}`);
-      });
-
-    return res.body;
   }
 
   /**
