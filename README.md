@@ -37,7 +37,7 @@ Use mutations to handle bank transactions and other things
 ```appscript
 pnwkit.setKeys('api key', 'bot key');
 
-const bankDeposit = await pnwkit.bankDepositMutation({ money: 1, note: 'works' }, `date`);
+const bankDeposit = await pnwkit.bankDepositMutation({ money: 1, note: 'works' }, `date`, 'api key');
 
 console.log(`Deposit Date: ${bankDeposit.date}`);
 ```
